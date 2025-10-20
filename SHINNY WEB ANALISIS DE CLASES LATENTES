@@ -1,0 +1,2012 @@
+# ============================================
+# APLICACIÓN SHINY PROFESIONAL PARA ANÁLISIS DE CLASES LATENTES (LCA)
+# Versión Mejorada con Diseño Profesional
+# ============================================
+
+# Instalación de paquetes necesarios
+# install.packages(c("shiny", "shinydashboard", "poLCA", "ggplot2", "tidyr", 
+#                    "dplyr", "DT", "gridExtra", "reshape2", "plotly", 
+#                    "viridis", "scales", "htmltools", "shinyWidgets", "writexl"))
+
+library(shiny)
+library(shinydashboard)
+library(poLCA)
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+library(DT)
+library(gridExtra)
+library(reshape2)
+library(plotly)
+library(viridis)
+library(scales)
+library(htmltools)
+library(shinyWidgets)
+library(writexl)
+
+# ============================================
+# CSS PERSONALIZADO PARA DISEÑO PROFESIONAL
+# ============================================
+
+custom_css <- "
+  /* Paleta de colores profesional */
+  :root {
+    --primary-dark: #1e3a5f;
+    --primary-medium: #2c5282;
+    --primary-light: #4a90e2;
+    --accent-color: #ff6b6b;
+    --success-color: #51cf66;
+    --warning-color: #ffd93d;
+    --background-light: #f8f9fa;
+    --text-dark: #2d3748;
+    --border-color: #e2e8f0;
+  }
+
+  /* Encabezado personalizado */
+  .skin-blue .main-header .logo {
+    background-color: var(--primary-dark) !important;
+    font-weight: 600;
+    font-size: 20px;
+    letter-spacing: 0.5px;
+  }
+
+  .skin-blue .main-header .navbar {
+    background-color: var(--primary-dark) !important;
+  }
+
+  /* Sidebar mejorado */
+  .skin-blue .main-sidebar {
+    background-color: #2d3748 !important;
+  }
+
+  .skin-blue .sidebar-menu > li > a {
+    border-left: 3px solid transparent;
+    transition: all 0.3s ease;
+  }
+
+  .skin-blue .sidebar-menu > li.active > a,
+  .skin-blue .sidebar-menu > li:hover > a {
+    background-color: var(--primary-medium) !important;
+    border-left: 3px solid var(--primary-light);
+  }
+
+  /* Cajas mejoradas */
+  .box {
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border-top: 3px solid var(--primary-light) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .box:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  }
+
+  .box-header {
+    border-bottom: 1px solid var(--border-color);
+    padding: 15px;
+  }
+
+  .box-title {
+    font-weight: 600;
+    color: var(--text-dark);
+    font-size: 16px;
+  }
+
+  /* Botones personalizados */
+  .btn-primary {
+    background-color: var(--primary-light) !important;
+    border-color: var(--primary-light) !important;
+    font-weight: 500;
+    padding: 10px 20px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+  }
+
+  .btn-primary:hover {
+    background-color: var(--primary-medium) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(74, 144, 226, 0.3);
+  }
+
+  .btn-success {
+    background-color: var(--success-color) !important;
+    border-color: var(--success-color) !important;
+    font-weight: 500;
+    border-radius: 6px;
+  }
+
+  .btn-warning {
+    background-color: var(--warning-color) !important;
+    border-color: var(--warning-color) !important;
+    color: var(--text-dark) !important;
+    font-weight: 500;
+    border-radius: 6px;
+  }
+
+  /* Inputs mejorados */
+  .form-control, .selectize-input {
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    transition: border-color 0.3s ease;
+  }
+
+  .form-control:focus, .selectize-input.focus {
+    border-color: var(--primary-light);
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+  }
+
+  /* Sliders personalizados */
+  .irs-bar {
+    background: linear-gradient(to right, var(--primary-medium), var(--primary-light));
+  }
+
+  .irs-from, .irs-to, .irs-single {
+    background: var(--primary-light);
+  }
+
+  /* Tablas mejoradas */
+  .dataTables_wrapper {
+    padding: 20px;
+  }
+
+  table.dataTable thead th {
+    background-color: var(--primary-dark);
+    color: white;
+    font-weight: 600;
+    padding: 12px;
+  }
+
+  table.dataTable tbody tr:hover {
+    background-color: rgba(74, 144, 226, 0.05);
+  }
+
+  /* Cards de métricas */
+  .metric-card {
+    background: linear-gradient(135deg, var(--primary-medium) 0%, var(--primary-light) 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    margin: 10px 0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+
+  .metric-value {
+    font-size: 32px;
+    font-weight: 700;
+    margin: 10px 0;
+  }
+
+  .metric-label {
+    font-size: 14px;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* Sección de ayuda mejorada */
+  .help-section {
+    background-color: var(--background-light);
+    padding: 20px;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-light);
+    margin: 15px 0;
+  }
+
+  /* Badges */
+  .info-badge {
+    background-color: var(--primary-light);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-block;
+    margin: 5px;
+  }
+
+  /* Progress bar personalizada */
+  .progress-bar {
+    background: linear-gradient(90deg, var(--primary-medium), var(--primary-light));
+  }
+
+  /* Tooltips mejorados */
+  .tooltip-inner {
+    background-color: var(--primary-dark);
+    border-radius: 6px;
+    padding: 8px 12px;
+  }
+
+  /* Animaciones suaves */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .content {
+    animation: fadeIn 0.5s ease;
+  }
+
+  /* Gráficos mejorados */
+  .plot-container {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+
+  /* Header de sección */
+  .section-header {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-medium) 100%);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 18px;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+
+  /* Mejoras para dispositivos móviles */
+  @media (max-width: 768px) {
+    .box {
+      margin-bottom: 15px;
+    }
+    
+    .metric-value {
+      font-size: 24px;
+    }
+  }
+
+  /* Loading spinner personalizado */
+  .shiny-notification {
+    background-color: var(--primary-dark);
+    color: white;
+    border-radius: 8px;
+    font-weight: 500;
+  }
+"
+
+# ============================================
+# INTERFAZ DE USUARIO (UI) MEJORADA
+# ============================================
+
+ui <- dashboardPage(
+  skin = "blue",
+  
+  # Encabezado con título profesional
+  dashboardHeader(
+    title = "LCA Analytics Pro",
+    titleWidth = 280,
+    tags$li(class = "dropdown",
+            tags$a(href = "#", 
+                   icon("question-circle"), 
+                   "Ayuda",
+                   style = "padding: 15px;"))
+  ),
+  
+  # Barra lateral mejorada
+  dashboardSidebar(
+    width = 280,
+    sidebarMenu(
+      id = "sidebar_menu",
+      menuItem("Inicio", tabName = "inicio", icon = icon("home")),
+      menuItem("Cargar Datos", tabName = "datos", icon = icon("upload")),
+      menuItem("Configurar Análisis", tabName = "modelo", icon = icon("sliders-h")),
+      menuItem("Resultados", tabName = "resultados", icon = icon("chart-bar")),
+      menuItem("Visualizaciones", tabName = "graficos", icon = icon("chart-line")),
+      menuItem("Comparación de Modelos", tabName = "comparacion", icon = icon("layer-group")),
+      menuItem("Exportar Resultados", tabName = "exportar", icon = icon("download")),
+      menuItem("Documentación", tabName = "ayuda", icon = icon("book"))
+    ),
+    
+    # Información adicional en sidebar
+    tags$div(
+      style = "padding: 20px; color: #95a5a6; font-size: 12px; margin-top: 30px;",
+      tags$hr(style = "border-color: #34495e;"),
+      tags$p(icon("chart-pie"), " Análisis de Clases Latentes"),
+      tags$p(icon("code"), " Versión 2.0"),
+      tags$p(icon("calendar"), " 2025")
+    )
+  ),
+  
+  # Cuerpo principal con CSS personalizado
+  dashboardBody(
+    tags$head(
+      tags$style(HTML(custom_css))
+    ),
+    
+    tabItems(
+      # ===== PESTAÑA 0: INICIO =====
+      tabItem(tabName = "inicio",
+              fluidRow(
+                column(12,
+                       tags$div(class = "section-header",
+                                icon("rocket"), " Bienvenido a LCA Analytics Pro"
+                       )
+                )
+              ),
+              
+              fluidRow(
+                # Tarjetas de bienvenida
+                column(4,
+                       tags$div(class = "metric-card",
+                                tags$div(class = "metric-label", "Método Estadístico"),
+                                tags$div(class = "metric-value", icon("chart-network")),
+                                tags$p("Análisis de Clases Latentes",
+                                       style = "margin-top: 10px; font-size: 14px;")
+                       )
+                ),
+                column(4,
+                       tags$div(class = "metric-card",
+                                style = "background: linear-gradient(135deg, #51cf66 0%, #37b24d 100%);",
+                                tags$div(class = "metric-label", "Tecnología"),
+                                tags$div(class = "metric-value", icon("r-project")),
+                                tags$p("R + Shiny + poLCA",
+                                       style = "margin-top: 10px; font-size: 14px;")
+                       )
+                ),
+                column(4,
+                       tags$div(class = "metric-card",
+                                style = "background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);",
+                                tags$div(class = "metric-label", "Funcionalidad"),
+                                tags$div(class = "metric-value", icon("cogs")),
+                                tags$p("Análisis Completo Automatizado",
+                                       style = "margin-top: 10px; font-size: 14px;")
+                       )
+                )
+              ),
+              
+              fluidRow(
+                box(
+                  title = "¿Qué es el Análisis de Clases Latentes?", 
+                  status = "primary", 
+                  solidHeader = TRUE, 
+                  width = 6,
+                  icon = icon("lightbulb"),
+                  tags$p("El Análisis de Clases Latentes (LCA) es una técnica estadística avanzada que identifica 
+                         subgrupos homogéneos (clases latentes) dentro de una población heterogénea.",
+                         style = "text-align: justify; line-height: 1.6;"),
+                  tags$hr(),
+                  tags$ul(
+                    tags$li(icon("check-circle", class = "text-success"), " Clasificación probabilística"),
+                    tags$li(icon("check-circle", class = "text-success"), " Variables categóricas"),
+                    tags$li(icon("check-circle", class = "text-success"), " Perfiles de respuesta")
+                  )
+                ),
+                
+                box(
+                  title = "Flujo de Trabajo Recomendado", 
+                  status = "info", 
+                  solidHeader = TRUE, 
+                  width = 6,
+                  icon = icon("project-diagram"),
+                  tags$div(style = "line-height: 2;",
+                           tags$p(tags$span(class = "info-badge", "1"), 
+                                  tags$strong("Cargar Datos:"), " CSV o datos de ejemplo"),
+                           tags$p(tags$span(class = "info-badge", "2"), 
+                                  tags$strong("Configurar:"), " Seleccionar variables y parámetros"),
+                           tags$p(tags$span(class = "info-badge", "3"), 
+                                  tags$strong("Ejecutar:"), " Estimar modelo LCA"),
+                           tags$p(tags$span(class = "info-badge", "4"), 
+                                  tags$strong("Analizar:"), " Interpretar resultados y gráficos"),
+                           tags$p(tags$span(class = "info-badge", "5"), 
+                                  tags$strong("Comparar:"), " Evaluar diferentes modelos"),
+                           tags$p(tags$span(class = "info-badge", "6"), 
+                                  tags$strong("Exportar:"), " Descargar resultados")
+                  )
+                )
+              ),
+              
+              fluidRow(
+                box(
+                  title = "Aplicaciones del LCA", 
+                  status = "success", 
+                  solidHeader = TRUE, 
+                  width = 12,
+                  icon = icon("briefcase"),
+                  column(3,
+                         tags$div(class = "help-section",
+                                  tags$h4(icon("user-md"), " Salud"),
+                                  tags$p("Identificación de perfiles de pacientes y patrones de síntomas")
+                         )
+                  ),
+                  column(3,
+                         tags$div(class = "help-section",
+                                  style = "border-left-color: #51cf66;",
+                                  tags$h4(icon("graduation-cap"), " Educación"),
+                                  tags$p("Clasificación de estilos de aprendizaje y rendimiento académico")
+                         )
+                  ),
+                  column(3,
+                         tags$div(class = "help-section",
+                                  style = "border-left-color: #ff6b6b;",
+                                  tags$h4(icon("chart-line"), " Marketing"),
+                                  tags$p("Segmentación de consumidores y perfiles de comportamiento")
+                         )
+                  ),
+                  column(3,
+                         tags$div(class = "help-section",
+                                  style = "border-left-color: #ffd93d;",
+                                  tags$h4(icon("brain"), " Psicología"),
+                                  tags$p("Tipologías de personalidad y patrones conductuales")
+                         )
+                  )
+                )
+              )
+      ),
+      
+      # ===== PESTAÑA 1: CARGAR DATOS =====
+      tabItem(tabName = "datos",
+              fluidRow(
+                column(12,
+                       tags$div(class = "section-header",
+                                icon("database"), " Gestión de Datos"
+                       )
+                )
+              ),
+              
+              fluidRow(
+                box(
+                  title = "Importar Datos", 
+                  status = "primary", 
+                  solidHeader = TRUE, 
+                  width = 5,
+                  icon = icon("file-upload"),
+                  
+                  radioButtons("data_source", 
+                               tags$strong("Seleccionar origen de datos:"),
+                               choices = c("Datos de ejemplo incluidos" = "ejemplo",
+                                           "Cargar mi archivo CSV" = "csv"),
+                               selected = "ejemplo"),
+                  
+                  conditionalPanel(
+                    condition = "input.data_source == 'csv'",
+                    tags$div(class = "help-section",
+                             tags$p(icon("info-circle"), " El archivo debe ser CSV con variables categóricas. 
+                                    Los valores deben comenzar en 1 (no en 0).")
+                    ),
+                    fileInput("file", 
+                              tags$strong("Seleccionar archivo CSV:"),
+                              accept = c(".csv", "text/csv"),
+                              buttonLabel = "Buscar...",
+                              placeholder = "Ningún archivo seleccionado")
+                  ),
+                  
+                  conditionalPanel(
+                    condition = "input.data_source == 'ejemplo'",
+                    selectInput("ejemplo_dataset", 
+                                tags$strong("Conjunto de datos:"),
+                                choices = c("Encuesta de Satisfacción Laboral (5 variables, 500 casos)" = "opinion",
+                                            "Evaluación de Salud Mental (5 síntomas, 300 casos)" = "salud",
+                                            "Preferencias de Consumo (6 ítems, 400 casos)" = "consumo"))
+                  ),
+                  
+                  tags$hr(),
+                  actionButton("load_data", 
+                               tags$strong(icon("check"), " Cargar y Procesar Datos"),
+                               class = "btn-success btn-lg btn-block",
+                               style = "margin-top: 10px;")
+                ),
+                
+                box(
+                  title = "Resumen del Dataset", 
+                  status = "info", 
+                  solidHeader = TRUE, 
+                  width = 7,
+                  icon = icon("info-circle"),
+                  uiOutput("data_summary_boxes"),
+                  tags$hr(),
+                  verbatimTextOutput("data_info")
+                )
+              ),
+              
+              fluidRow(
+                box(
+                  title = "Exploración de Datos", 
+                  status = "primary", 
+                  solidHeader = TRUE, 
+                  width = 12,
+                  icon = icon("table"),
+                  
+                  tabsetPanel(
+                    tabPanel(
+                      tags$span(icon("eye"), " Vista Previa"),
+                      tags$br(),
+                      DTOutput("data_preview")
+                    ),
+                    tabPanel(
+                      tags$span(icon("chart-bar"), " Estadísticas Descriptivas"),
+                      tags$br(),
+                      verbatimTextOutput("data_statistics")
+                    ),
+                    tabPanel(
+                      tags$span(icon("chart-pie"), " Distribuciones"),
+                      tags$br(),
+                      plotOutput("frequency_plots", height = "500px")
+                    )
+                  )
+                )
+              )
+      ),
+      
+      # ===== PESTAÑA 2: CONFIGURAR MODELO =====
+      tabItem(tabName = "modelo",
+              fluidRow(
+                column(12,
+                       tags$div(class = "section-header",
+                                icon("sliders-h"), " Configuración del Modelo LCA"
+                       )
+                )
+              ),
+              
+              fluidRow(
+                box(
+                  title = "Parámetros del Modelo", 
+                  status = "primary", 
+                  solidHeader = TRUE, 
+                  width = 6,
+                  icon = icon("cog"),
+                  
+                  uiOutput("variable_selection"),
+                  
+                  tags$hr(),
+                  
+                  tags$div(class = "help-section",
+                           tags$strong(icon("lightbulb"), " Número de Clases Latentes"),
+                           tags$p("Selecciona cuántos subgrupos deseas identificar. 
+                                  Se recomienda comenzar con 2-4 clases.")
+                  ),
+                  
+                  sliderInput("nclass", 
+                              NULL,
+                              min = 2, 
+                              max = 8, 
+                              value = 3, 
+                              step = 1,
+                              width = "100%"),
+                  
+                  tags$hr(),
+                  
+                  pickerInput("advanced_options",
+                              tags$strong(icon("cogs"), " Opciones Avanzadas"),
+                              choices = c("Mostrar parámetros avanzados"),
+                              options = list(`actions-box` = TRUE),
+                              multiple = TRUE),
+                  
+                  conditionalPanel(
+                    condition = "input.advanced_options.includes('Mostrar parámetros avanzados')",
+                    
+                    sliderInput("max_iter", 
+                                "Iteraciones máximas:",
+                                min = 500, 
+                                max = 20000, 
+                                value = 5000, 
+                                step = 500),
+                    
+                    numericInput("nrep", 
+                                 "Repeticiones (evitar mínimos locales):",
+                                 value = 15, 
+                                 min = 1, 
+                                 max = 100),
+                    
+                    sliderInput("tolerance",
+                                "Tolerancia de convergencia:",
+                                min = 1e-8,
+                                max = 1e-4,
+                                value = 1e-6,
+                                step = 1e-8)
+                  ),
+                  
+                  tags$hr(),
+                  
+                  actionButton("run_lca", 
+                               tags$strong(icon("play-circle"), " EJECUTAR ANÁLISIS LCA"),
+                               class = "btn-primary btn-lg btn-block",
+                               style = "font-size: 16px; padding: 15px;")
+                ),
+                
+                box(
+                  title = "Estado del Análisis", 
+                  status = "info", 
+                  solidHeader = TRUE, 
+                  width = 6,
+                  icon = icon("tasks"),
+                  
+                  uiOutput("model_status_ui"),
+                  
+                  tags$hr(),
+                  
+                  tags$h4(icon("chart-line"), " Índices de Bondad de Ajuste"),
+                  uiOutput("fit_indices_boxes")
+                )
+              )
+      ),
+      
+      # ===== PESTAÑA 3: RESULTADOS =====
+      tabItem(tabName = "resultados",
+              fluidRow(
+                column(12,
+                       tags$div(class = "section-header",
+                                icon("poll"), " Resultados del Análisis"
+                       )
+                )
+              ),
+              
+              fluidRow(
+                box(
+                  title = "Distribución de Clases Latentes", 
+                  status = "primary", 
+                  solidHeader = TRUE, 
+                  width = 6,
+                  icon = icon("chart-pie"),
+                  plotlyOutput("class_dist_plot_interactive", height = "350px")
+                ),
+                box(
+                  title = "Tamaños de Clase", 
+                  status = "info", 
+                  solidHeader = TRUE, 
+                  width = 6,
+                  icon = icon("users"),
+                  uiOutput("class_size_boxes")
+                )
+              ),
+              
+              fluidRow(
+                box(
+                  title = "Probabilidades Condicionales de Respuesta", 
+                  status = "success", 
+                  solidHeader = TRUE, 
+                  width = 12,
+                  icon = icon("table"),
+                  
+                  tabsetPanel(
+                    tabPanel(
+                      tags$span(icon("list"), " Por Variable"),
+                      tags$br(),
+                      uiOutput("prob_tables_by_variable")
+                    ),
+                    tabPanel(
+                      tags$span(icon("layer-group"), " Por Clase"),
+                      tags$br(),
+                      uiOutput("prob_tables_by_class")
+                    ),
+                    tabPanel(
+                      tags$span(icon("code"), " Salida Completa"),
+                      tags$br(),
+                      verbatimTextOutput("conditional_probs")
+                    )
+                  )
+                )
+              ),
+              
+              fluidRow(
+                box(
+                  title = "Clasificación de Casos", 
+                  status = "warning", 
+                  solidHeader = TRUE, 
+                  width = 12,
+                  icon = icon("tags"),
+                  
+                  tags$div(class = "help-section",
+                           tags$p(icon("info-circle"), " Cada observación se asigna a la clase con mayor probabilidad posterior.")
+                  ),
+                  
+                  DTOutput("classified_data")
+                )
+              )
+      ),
+      
+      # ===== PESTAÑA 4: VISUALIZACIONES =====
+      tabItem(tabName = "graficos",
+              fluidRow(
+                column(12,
+                       tags$div(class = "section-header",
+                                icon("chart-area"), " Visualizaciones Interactivas"
+                       )
+                )
+              ),
+              
+              fluidRow(
+                box(
+                  title = "Probabilidades Condicionales por Variable", 
+                  status = "primary", 
+                  solidHeader = TRUE, 
+                  width = 12,
+                  icon = icon("chart-bar"),
+                  
+                  column(3,
+                         selectInput("plot_style",
+                                     "Estilo de gráfico:",
+                                     choices = c("Barras agrupadas" = "dodge",
+                                                 "Barras apiladas" = "stack",
+                                                 "Barras al 100%" = "fill")),
+                         
+                         pickerInput("color_palette",
+                                     "Paleta de colores:",
+                                     choices = c("Profesional" = "Set2",
+                                                 "Viridis" = "viridis",
+                                                 "Cálida" = "Warm",
+                                                 "Fría" = "Cold",
+                                                 "Pastel" = "Pastel1"),
+                                     selected = "Set2"),
+                         
+                         checkboxInput("show_values",
+                                       "Mostrar valores en gráfico",
+                                       value = FALSE)
+                  ),
+                  
+                  column(9,
+                         tags$div(class = "plot-container",
+                                  plotOutput("prob_plot", height = "600px")
+                         )
+                  )
+                )
+              ),
+              
+              fluidRow(
+                box(
+                  title = "Matriz de Probabilidades (Heatmap)", 
+                  status = "success", 
+                  solidHeader = TRUE, 
+                  width = 6,
+                  icon = icon("th"),
+                  plotlyOutput("heatmap_plot", height = "400px")
+                ),
+                
+                box(
+                  title = "Probabilidades Posteriores", 
+                  status = "info", 
+                  solidHeader = TRUE, 
+                  width = 6,
+                  icon = icon("percentage"),
+                  plotOutput("posterior_plot", height = "400px")
+                )
+              ),
+              
+              fluidRow(
+                box(
+                  title = "Análisis de Entropía por Clase", 
+                  status = "warning", 
+                  solidHeader = TRUE, 
+                  width = 12,
+                  icon = icon("chart-line"),
+                  plotlyOutput("entropy_plot", height = "350px")
+                )
+              )
+      ),
+      
+      # ===== PESTAÑA 5: COMPARACIÓN =====
+      tabItem(tabName = "comparacion",
+              fluidRow(
+                column(12,
+                       tags$div(class = "section-header",
+                                icon("layer-group"), " Comparación de Modelos"
+                       )
+                )
+              ),
+              
+              fluidRow(
+                box(
+                  title = "Configuración de Comparación", 
+                  status = "primary", 
+                  solidHeader = TRUE, 
+                  width = 4,
+                  icon = icon("sliders-h"),
+                  
+                  tags$div(class = "help-section",
+                           tags$p(icon("lightbulb"), " Compara modelos con diferente número de clases 
+                                  para identificar la solución óptima.")
+                  ),
+                  
+                  checkboxGroupInput("nclass_compare", 
+                                     tags$strong("Número de clases a comparar:"),
+                                     choices = c("2 clases" = 2, 
+                                                 "3 clases" = 3, 
+                                                 "4 clases" = 4, 
+                                                 "5 clases" = 5, 
+                                                 "6 clases" = 6,
+                                                 "7 clases" = 7,
+                                                 "8 clases" = 8),
+                                     selected = c(2, 3, 4, 5)),
+                  
+                  tags$hr(),
+                  
+                  actionButton("compare_models", 
+                               tags$strong(icon("balance-scale"), " COMPARAR MODELOS"),
+                               class = "btn-warning btn-lg btn-block",
+                               style = "padding: 12px;")
+                ),
+                
+                box(
+                  title = "Recomendación Automática", 
+                  status = "success", 
+                  solidHeader = TRUE, 
+                  width = 8,
+                  icon = icon("star"),
+                  uiOutput("model_recommendation")
+                )
+              ),
+              
+              fluidRow(
+                box(
+                  title = "Tabla Comparativa de Índices", 
+                  status = "info", 
+                  solidHeader = TRUE, 
+                  width = 12,
+                  icon = icon("table"),
+                  DTOutput("comparison_table")
+                )
+              ),
+              
+              fluidRow(
+                box(
+                  title = "Gráfico Comparativo AIC y BIC", 
+                  status = "primary", 
+                  solidHeader = TRUE, 
+                  width = 6,
+                  icon = icon("chart-line"),
+                  plotlyOutput("comparison_plot", height = "400px")
+                ),
+                
+                box(
+                  title = "Evolución de Log-Likelihood", 
+                  status = "warning", 
+                  solidHeader = TRUE, 
+                  width = 6,
+                  icon = icon("chart-area"),
+                  plotlyOutput("loglik_plot", height = "400px")
+                )
+              )
+      ),
+      
+      # ===== PESTAÑA 6: EXPORTAR =====
+      tabItem(tabName = "exportar",
+              fluidRow(
+                column(12,
+                       tags$div(class = "section-header",
+                                icon("download"), " Exportar Resultados"
+                       )
+                )
+              ),
+              
+              fluidRow(
+                box(
+                  title = "Descargar Datos", 
+                  status = "primary", 
+                  solidHeader = TRUE, 
+                  width = 6,
+                  icon = icon("file-download"),
+                  
+                  tags$h4(icon("database"), " Conjuntos de Datos"),
+                  tags$p("Descarga los datos originales o con clasificación asignada."),
+                  
+                  downloadButton("download_original_data", 
+                                 "Datos Originales (CSV)",
+                                 class = "btn-info btn-block",
+                                 style = "margin: 10px 0;"),
+                  
+                  downloadButton("download_classified_data", 
+                                 "Datos con Clasificación (CSV)",
+                                 class = "btn-info btn-block",
+                                 style = "margin: 10px 0;"),
+                  
+                  downloadButton("download_classified_excel", 
+                                 "Datos con Clasificación (Excel)",
+                                 class = "btn-success btn-block",
+                                 style = "margin: 10px 0;")
+                ),
+                
+                box(
+                  title = "Descargar Resultados", 
+                  status = "success", 
+                  solidHeader = TRUE, 
+                  width = 6,
+                  icon = icon("chart-bar"),
+                  
+                  tags$h4(icon("file-alt"), " Reportes y Análisis"),
+                  tags$p("Exporta tablas de resultados y comparaciones."),
+                  
+                  downloadButton("download_probs", 
+                                 "Probabilidades Condicionales (CSV)",
+                                 class = "btn-warning btn-block",
+                                 style = "margin: 10px 0;"),
+                  
+                  downloadButton("download_comparison", 
+                                 "Comparación de Modelos (CSV)",
+                                 class = "btn-warning btn-block",
+                                 style = "margin: 10px 0;"),
+                  
+                  downloadButton("download_fit_indices", 
+                                 "Índices de Ajuste (CSV)",
+                                 class = "btn-warning btn-block",
+                                 style = "margin: 10px 0;")
+                )
+              ),
+              
+              fluidRow(
+                box(
+                  title = "Descargar Gráficos", 
+                  status = "info", 
+                  solidHeader = TRUE, 
+                  width = 12,
+                  icon = icon("image"),
+                  
+                  column(4,
+                         tags$h4("Gráficos Principales"),
+                         downloadButton("download_plot_probs", 
+                                        "Probabilidades Condicionales (PNG)",
+                                        class = "btn-primary btn-block",
+                                        style = "margin: 10px 0;"),
+                         downloadButton("download_plot_comparison", 
+                                        "Comparación de Modelos (PNG)",
+                                        class = "btn-primary btn-block",
+                                        style = "margin: 10px 0;")
+                  ),
+                  
+                  column(4,
+                         tags$h4("Gráficos Interactivos"),
+                         tags$p("Los gráficos interactivos pueden exportarse directamente usando 
+                                los controles en la esquina superior derecha de cada gráfico.",
+                                class = "text-muted")
+                  ),
+                  
+                  column(4,
+                         tags$h4("Formato de Salida"),
+                         selectInput("plot_format",
+                                     "Formato de imagen:",
+                                     choices = c("PNG (alta resolución)" = "png",
+                                                 "PDF (vectorial)" = "pdf",
+                                                 "JPEG" = "jpeg")),
+                         sliderInput("plot_dpi",
+                                     "Resolución (DPI):",
+                                     min = 72,
+                                     max = 600,
+                                     value = 300,
+                                     step = 50)
+                  )
+                )
+              )
+      ),
+      
+      # ===== PESTAÑA 7: AYUDA =====
+      tabItem(tabName = "ayuda",
+              fluidRow(
+                column(12,
+                       tags$div(class = "section-header",
+                                icon("book"), " Documentación y Ayuda"
+                       )
+                )
+              ),
+              
+              fluidRow(
+                box(
+                  title = "Guía Rápida de Uso", 
+                  status = "primary", 
+                  solidHeader = TRUE, 
+                  width = 6,
+                  icon = icon("rocket"),
+                  
+                  tags$div(class = "help-section",
+                           tags$h4(icon("upload"), " 1. Cargar Datos"),
+                           tags$p("Utiliza datos de ejemplo o carga tu propio archivo CSV. 
+                                  Asegúrate de que las variables sean categóricas y comiencen en 1.")
+                  ),
+                  
+                  tags$div(class = "help-section",
+                           style = "border-left-color: #51cf66;",
+                           tags$h4(icon("sliders-h"), " 2. Configurar Modelo"),
+                           tags$p("Selecciona las variables de análisis y define el número de clases latentes. 
+                                  Para análisis exploratorio, prueba con 2-4 clases inicialmente.")
+                  ),
+                  
+                  tags$div(class = "help-section",
+                           style = "border-left-color: #ff6b6b;",
+                           tags$h4(icon("play"), " 3. Ejecutar Análisis"),
+                           tags$p("Haz clic en 'Ejecutar Análisis LCA'. El proceso puede tardar unos segundos 
+                                  dependiendo del tamaño de tus datos.")
+                  )
+                ),
+                
+                box(
+                  title = "Interpretación de Resultados", 
+                  status = "info", 
+                  solidHeader = TRUE, 
+                  width = 6,
+                  icon = icon("info-circle"),
+                  
+                  tags$h4("Índices de Ajuste"),
+                  tags$ul(
+                    tags$li(tags$strong("AIC:"), " Menor es mejor. Penaliza complejidad."),
+                    tags$li(tags$strong("BIC:"), " Menor es mejor. Penalización más fuerte."),
+                    tags$li(tags$strong("Log-likelihood:"), " Más alto (menos negativo) es mejor.")
+                  ),
+                  
+                  tags$hr(),
+                  
+                  tags$h4("Probabilidades Condicionales"),
+                  tags$p("Valores > 0.7 indican fuerte asociación de la clase con esa respuesta. 
+                         Perfiles coherentes facilitan la interpretación de clases.")
+                )
+              ),
+              
+              fluidRow(
+                box(
+                  title = "Requisitos de Datos", 
+                  status = "warning", 
+                  solidHeader = TRUE, 
+                  width = 12,
+                  icon = icon("exclamation-triangle"),
+                  
+                  column(4,
+                         tags$h4(icon("check-circle", class = "text-success"), " Datos Válidos"),
+                         tags$ul(
+                           tags$li("Variables categóricas"),
+                           tags$li("Valores comenzando en 1"),
+                           tags$li("Sin valores faltantes (NA)"),
+                           tags$li("Formato CSV con encabezados")
+                         )
+                  ),
+                  
+                  column(4,
+                         tags$h4(icon("times-circle", class = "text-danger"), " Evitar"),
+                         tags$ul(
+                           tags$li("Variables continuas"),
+                           tags$li("Valores comenzando en 0"),
+                           tags$li("Datos incompletos"),
+                           tags$li("Archivos Excel directos")
+                         )
+                  ),
+                  
+                  column(4,
+                         tags$h4(icon("lightbulb"), " Recomendaciones"),
+                         tags$ul(
+                           tags$li("Mínimo 200 observaciones"),
+                           tags$li("3-10 variables idealmente"),
+                           tags$li("Categorías balanceadas"),
+                           tags$li("Preprocesar datos en R")
+                         )
+                  )
+                )
+              ),
+              
+              fluidRow(
+                box(
+                  title = "Referencias Bibliográficas", 
+                  status = "success", 
+                  solidHeader = TRUE, 
+                  width = 12,
+                  icon = icon("book-open"),
+                  
+                  tags$ol(
+                    tags$li("Linzer, D. A., & Lewis, J. B. (2011). poLCA: An R package for polytomous 
+                            variable latent class analysis. Journal of Statistical Software, 42(10), 1-29."),
+                    tags$li("Collins, L. M., & Lanza, S. T. (2010). Latent class and latent transition analysis. 
+                            John Wiley & Sons."),
+                    tags$li("Hagenaars, J. A., & McCutcheon, A. L. (2002). Applied latent class analysis. 
+                            Cambridge University Press."),
+                    tags$li("Vermunt, J. K., & Magidson, J. (2002). Latent class cluster analysis. 
+                            In Applied latent class analysis (pp. 89-106).")
+                  )
+                )
+              )
+      )
+    )
+  )
+)
+
+# ============================================
+# SERVIDOR
+# ============================================
+
+server <- function(input, output, session) {
+  
+  # Variables reactivas
+  data_loaded <- reactiveVal(NULL)
+  lca_model <- reactiveVal(NULL)
+  comparison_results <- reactiveVal(NULL)
+  
+  # ===== FUNCIONES AUXILIARES MEJORADAS =====
+  
+  generate_example_data <- function(type) {
+    set.seed(123)
+    if (type == "opinion") {
+      data.frame(
+        Satisfaccion_General = sample(1:5, 500, replace = TRUE, prob = c(0.1, 0.15, 0.3, 0.3, 0.15)),
+        Balance_Vida_Trabajo = sample(1:5, 500, replace = TRUE, prob = c(0.15, 0.2, 0.3, 0.25, 0.1)),
+        Compensacion = sample(1:5, 500, replace = TRUE, prob = c(0.2, 0.25, 0.25, 0.2, 0.1)),
+        Oportunidades_Desarrollo = sample(1:5, 500, replace = TRUE, prob = c(0.1, 0.15, 0.25, 0.35, 0.15)),
+        Ambiente_Laboral = sample(1:5, 500, replace = TRUE, prob = c(0.1, 0.2, 0.25, 0.3, 0.15))
+      )
+    } else if (type == "salud") {
+      data.frame(
+        Ansiedad = sample(1:3, 300, replace = TRUE, prob = c(0.5, 0.3, 0.2)),
+        Depresion = sample(1:3, 300, replace = TRUE, prob = c(0.6, 0.25, 0.15)),
+        Insomnio = sample(1:3, 300, replace = TRUE, prob = c(0.55, 0.3, 0.15)),
+        Fatiga = sample(1:3, 300, replace = TRUE, prob = c(0.45, 0.35, 0.2)),
+        Irritabilidad = sample(1:3, 300, replace = TRUE, prob = c(0.5, 0.3, 0.2))
+      )
+    } else if (type == "consumo") {
+      data.frame(
+        Frecuencia_Compra = sample(1:4, 400, replace = TRUE, prob = c(0.3, 0.35, 0.25, 0.1)),
+        Sensibilidad_Precio = sample(1:4, 400, replace = TRUE, prob = c(0.25, 0.3, 0.3, 0.15)),
+        Preferencia_Marca = sample(1:4, 400, replace = TRUE, prob = c(0.2, 0.25, 0.35, 0.2)),
+        Canal_Online = sample(1:3, 400, replace = TRUE, prob = c(0.4, 0.35, 0.25)),
+        Influencia_Redes = sample(1:4, 400, replace = TRUE, prob = c(0.25, 0.3, 0.25, 0.2)),
+        Sostenibilidad = sample(1:3, 400, replace = TRUE, prob = c(0.3, 0.45, 0.25))
+      )
+    }
+  }
+  
+  # ===== CARGAR DATOS =====
+  
+  observeEvent(input$load_data, {
+    req(input$data_source)
+    
+    if (input$data_source == "ejemplo") {
+      req(input$ejemplo_dataset)
+      data <- generate_example_data(input$ejemplo_dataset)
+      data_loaded(data)
+      showNotification("✓ Datos cargados correctamente", 
+                       type = "message", 
+                       duration = 3)
+    } else if (input$data_source == "csv") {
+      req(input$file)
+      tryCatch({
+        data <- read.csv(input$file$datapath, stringsAsFactors = FALSE)
+        data_loaded(data)
+        showNotification("✓ Archivo CSV cargado exitosamente", 
+                         type = "message", 
+                         duration = 3)
+      }, error = function(e) {
+        showNotification(paste("✗ Error al cargar archivo:", e$message), 
+                         type = "error", 
+                         duration = 5)
+      })
+    }
+  })
+  
+  # Resumen visual del dataset
+  output$data_summary_boxes <- renderUI({
+    req(data_loaded())
+    data <- data_loaded()
+    
+    tagList(
+      fluidRow(
+        column(4,
+               tags$div(class = "metric-card",
+                        style = "background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);",
+                        tags$div(class = "metric-label", "Observaciones"),
+                        tags$div(class = "metric-value", format(nrow(data), big.mark = ","))
+               )
+        ),
+        column(4,
+               tags$div(class = "metric-card",
+                        style = "background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);",
+                        tags$div(class = "metric-label", "Variables"),
+                        tags$div(class = "metric-value", ncol(data))
+               )
+        ),
+        column(4,
+               tags$div(class = "metric-card",
+                        style = "background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);",
+                        tags$div(class = "metric-label", "Completitud"),
+                        tags$div(class = "metric-value", 
+                                 paste0(round((1 - sum(is.na(data))/(nrow(data)*ncol(data))) * 100, 1), "%"))
+               )
+        )
+      )
+    )
+  })
+  
+  # Información del dataset
+  output$data_info <- renderPrint({
+    req(data_loaded())
+    data <- data_loaded()
+    cat("ESTRUCTURA DE DATOS\n")
+    cat("===================\n\n")
+    str(data)
+  })
+  
+  # Estadísticas descriptivas
+  output$data_statistics <- renderPrint({
+    req(data_loaded())
+    data <- data_loaded()
+    cat("RESUMEN ESTADÍSTICO\n")
+    cat("===================\n\n")
+    print(summary(data))
+    
+    cat("\n\nFRECUENCIAS POR VARIABLE\n")
+    cat("========================\n\n")
+    for (var in names(data)) {
+      cat(var, ":\n")
+      print(table(data[[var]]))
+      cat("\n")
+    }
+  })
+  
+  # Vista previa de datos
+  output$data_preview <- renderDT({
+    req(data_loaded())
+    datatable(
+      head(data_loaded(), 100), 
+      options = list(
+        scrollX = TRUE, 
+        pageLength = 10,
+        dom = 'Bfrtip',
+        buttons = c('copy', 'csv', 'excel')
+      ),
+      class = 'cell-border stripe'
+    )
+  })
+  
+  # Gráficos de frecuencia
+  output$frequency_plots <- renderPlot({
+    req(data_loaded())
+    data <- data_loaded()
+    
+    plot_list <- list()
+    for (var_name in names(data)) {
+      freq_table <- as.data.frame(table(data[[var_name]]))
+      names(freq_table) <- c("Categoria", "Frecuencia")
+      
+      p <- ggplot(freq_table, aes(x = Categoria, y = Frecuencia)) +
+        geom_bar(stat = "identity", fill = "#4a90e2", alpha = 0.8) +
+        geom_text(aes(label = Frecuencia), vjust = -0.5, size = 4) +
+        labs(title = var_name, x = "Categoría", y = "Frecuencia") +
+        theme_minimal() +
+        theme(
+          plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
+          panel.grid.major.x = element_blank()
+        )
+      
+      plot_list[[var_name]] <- p
+    }
+    
+    do.call(gridExtra::grid.arrange, c(plot_list, ncol = 3))
+  })
+  
+  # Selección de variables
+  output$variable_selection <- renderUI({
+    req(data_loaded())
+    
+    tagList(
+      tags$div(class = "help-section",
+               tags$strong(icon("database"), " Variables Disponibles"),
+               tags$p("Selecciona las variables a incluir en el análisis LCA.")
+      ),
+      
+      checkboxGroupInput(
+        "variables", 
+        NULL,
+        choices = names(data_loaded()),
+        selected = names(data_loaded())
+      )
+    )
+  })
+  
+  # ===== EJECUTAR MODELO LCA =====
+  
+  observeEvent(input$run_lca, {
+    req(data_loaded(), input$variables, input$nclass)
+    
+    withProgress(message = 'Ejecutando análisis LCA...', value = 0, {
+      tryCatch({
+        data <- data_loaded()[, input$variables, drop = FALSE]
+        
+        data <- data.frame(lapply(data, function(x) {
+          if (!is.numeric(x)) as.numeric(as.factor(x)) else x
+        }))
+        
+        incProgress(0.3, detail = "Preparando datos...")
+        
+        f <- as.formula(paste("cbind(", paste(input$variables, collapse = ", "), ") ~ 1"))
+        
+        incProgress(0.5, detail = "Estimando modelo...")
+        
+        model <- poLCA(f, data, nclass = input$nclass, maxiter = input$max_iter, 
+                       nrep = input$nrep, verbose = FALSE)
+        
+        incProgress(1, detail = "¡Completado!")
+        
+        lca_model(model)
+        showNotification("✓ Análisis LCA completado exitosamente", 
+                         type = "message", 
+                         duration = 4)
+        
+      }, error = function(e) {
+        showNotification(paste("✗ Error en el análisis:", e$message), 
+                         type = "error", 
+                         duration = 5)
+      })
+    })
+  })
+  
+  # Estado del modelo con UI mejorada
+  output$model_status_ui <- renderUI({
+    req(lca_model())
+    model <- lca_model()
+    
+    convergence_status <- ifelse(model$maxiter > model$numiter, "Exitosa", "No alcanzada")
+    convergence_color <- ifelse(model$maxiter > model$numiter, "#51cf66", "#ff6b6b")
+    
+    tagList(
+      tags$h4(icon("info-circle"), " Información del Modelo"),
+      tags$hr(),
+      tags$table(
+        style = "width: 100%; font-size: 14px;",
+        tags$tr(
+          tags$td(tags$strong("Clases estimadas:")),
+          tags$td(tags$span(style = "color: #4a90e2; font-weight: bold;", model$nclass))
+        ),
+        tags$tr(
+          tags$td(tags$strong("Observaciones:")),
+          tags$td(format(model$N, big.mark = ","))
+        ),
+        tags$tr(
+          tags$td(tags$strong("Parámetros:")),
+          tags$td(model$npar)
+        ),
+        tags$tr(
+          tags$td(tags$strong("Grados de libertad:")),
+          tags$td(model$resid.df)
+        ),
+        tags$tr(
+          tags$td(tags$strong("Iteraciones:")),
+          tags$td(paste(model$numiter, "/", model$maxiter))
+        ),
+        tags$tr(
+          tags$td(tags$strong("Convergencia:")),
+          tags$td(tags$span(style = paste0("color: ", convergence_color, "; font-weight: bold;"),
+                            icon(ifelse(convergence_status == "Exitosa", "check-circle", "times-circle")),
+                            " ", convergence_status))
+        )
+      )
+    )
+  })
+  
+  # Índices de ajuste con cajas visuales
+  output$fit_indices_boxes <- renderUI({
+    req(lca_model())
+    model <- lca_model()
+    
+    tagList(
+      fluidRow(
+        column(6,
+               tags$div(
+                 style = "background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                          color: white; padding: 15px; border-radius: 8px; margin: 5px 0;",
+                 tags$div(style = "font-size: 12px; opacity: 0.9;", "AIC"),
+                 tags$div(style = "font-size: 20px; font-weight: bold;", 
+                          format(round(model$aic, 2), big.mark = ","))
+               )
+        ),
+        column(6,
+               tags$div(
+                 style = "background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); 
+                          color: white; padding: 15px; border-radius: 8px; margin: 5px 0;",
+                 tags$div(style = "font-size: 12px; opacity: 0.9;", "BIC"),
+                 tags$div(style = "font-size: 20px; font-weight: bold;", 
+                          format(round(model$bic, 2), big.mark = ","))
+               )
+        )
+      ),
+      fluidRow(
+        column(6,
+               tags$div(
+                 style = "background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); 
+                          color: white; padding: 15px; border-radius: 8px; margin: 5px 0;",
+                 tags$div(style = "font-size: 12px; opacity: 0.9;", "Log-likelihood"),
+                 tags$div(style = "font-size: 20px; font-weight: bold;", 
+                          format(round(model$llik, 2), big.mark = ","))
+               )
+        ),
+        column(6,
+               tags$div(
+                 style = "background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); 
+                          color: white; padding: 15px; border-radius: 8px; margin: 5px 0;",
+                 tags$div(style = "font-size: 12px; opacity: 0.9;", "G²"),
+                 tags$div(style = "font-size: 20px; font-weight: bold;", 
+                          format(round(model$Gsq, 2), big.mark = ","))
+               )
+        )
+      )
+    )
+  })
+  
+  # Probabilidades condicionales (texto)
+  output$conditional_probs <- renderPrint({
+    req(lca_model())
+    model <- lca_model()
+    cat("PROBABILIDADES CONDICIONALES DE RESPUESTA\n")
+    cat("==========================================\n\n")
+    print(model$probs)
+  })
+  
+  # Tamaños de clase con visualización
+  output$class_size_boxes <- renderUI({
+    req(lca_model())
+    model <- lca_model()
+    
+    colors <- c("#667eea", "#f093fb", "#4facfe", "#43e97b", "#fa709a", "#ffd93d", "#6dd5ed", "#a8edea")
+    
+    class_boxes <- lapply(1:model$nclass, function(i) {
+      column(
+        width = 12 / min(model$nclass, 4),
+        tags$div(
+          style = paste0("background: linear-gradient(135deg, ", colors[i], " 0%, ", colors[min(i+1, length(colors))], " 100%); 
+                         color: white; padding: 20px; border-radius: 8px; margin: 10px 0; text-align: center;"),
+          tags$div(style = "font-size: 14px; opacity: 0.9; font-weight: 600;", 
+                   paste("CLASE", i)),
+          tags$div(style = "font-size: 28px; font-weight: bold; margin: 10px 0;", 
+                   paste0(round(model$P[i] * 100, 1), "%")),
+          tags$div(style = "font-size: 12px; opacity: 0.8;", 
+                   paste(round(model$P[i] * model$N), "casos"))
+        )
+      )
+    })
+    
+    do.call(fluidRow, class_boxes)
+  })
+  
+  # Datos clasificados
+  output$classified_data <- renderDT({
+    req(lca_model(), data_loaded())
+    model <- lca_model()
+    
+    classified <- data_loaded()[, input$variables, drop = FALSE]
+    classified$Clase_Asignada <- model$predclass
+    classified$Probabilidad_Maxima <- round(apply(model$posterior, 1, max), 3)
+    
+    post_probs <- as.data.frame(model$posterior)
+    names(post_probs) <- paste0("Prob_Clase_", 1:model$nclass)
+    classified <- cbind(classified, round(post_probs, 3))
+    
+    datatable(
+      head(classified, 200), 
+      options = list(
+        scrollX = TRUE, 
+        pageLength = 10,
+        dom = 'Bfrtip',
+        buttons = c('copy', 'csv', 'excel')
+      ),
+      class = 'cell-border stripe'
+    ) %>%
+      formatStyle(
+        'Clase_Asignada',
+        backgroundColor = styleEqual(
+          1:model$nclass,
+          c("#e3f2fd", "#f3e5f5", "#e0f2f1", "#fff3e0", "#fce4ec", "#e8eaf6", "#f1f8e9", "#fff8e1")[1:model$nclass]
+        )
+      )
+  })
+  
+  # Tablas de probabilidades por variable
+  output$prob_tables_by_variable <- renderUI({
+    req(lca_model())
+    model <- lca_model()
+    
+    tables <- lapply(names(model$probs), function(var_name) {
+      prob_matrix <- model$probs[[var_name]]
+      df <- as.data.frame(prob_matrix)
+      rownames(df) <- paste("Clase", 1:nrow(df))
+      
+      tagList(
+        tags$h4(icon("table"), " ", var_name),
+        renderTable(df, rownames = TRUE, digits = 3),
+        tags$hr()
+      )
+    })
+    
+    do.call(tagList, tables)
+  })
+  
+  # ===== VISUALIZACIONES MEJORADAS =====
+  
+  # Gráfico de probabilidades condicionales
+  output$prob_plot <- renderPlot({
+    req(lca_model())
+    model <- lca_model()
+    
+    plot_list <- list()
+    
+    for (var_name in names(model$probs)) {
+      prob_matrix <- model$probs[[var_name]]
+      df <- as.data.frame(prob_matrix)
+      df$Clase <- paste("Clase", 1:nrow(df))
+      
+      df_long <- pivot_longer(df, cols = -Clase, names_to = "Respuesta", values_to = "Probabilidad")
+      
+      p <- ggplot(df_long, aes(x = Respuesta, y = Probabilidad, fill = Clase)) +
+        geom_bar(stat = "identity", position = input$plot_style, alpha = 0.85) +
+        labs(title = var_name, x = "Categoría", y = "Probabilidad") +
+        theme_minimal() +
+        theme(
+          legend.position = "bottom",
+          plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
+          panel.grid.major.x = element_blank(),
+          axis.text = element_text(size = 10),
+          legend.text = element_text(size = 10)
+        ) +
+        scale_fill_brewer(palette = input$color_palette)
+      
+      if (input$show_values) {
+        p <- p + geom_text(aes(label = round(Probabilidad, 2)), 
+                           position = position_dodge(width = 0.9), 
+                           vjust = -0.5, 
+                           size = 3)
+      }
+      
+      plot_list[[var_name]] <- p
+    }
+    
+    do.call(gridExtra::grid.arrange, c(plot_list, ncol = 2))
+  })
+  
+  # Distribución de clases interactiva
+  output$class_dist_plot_interactive <- renderPlotly({
+    req(lca_model())
+    model <- lca_model()
+    
+    df <- data.frame(
+      Clase = paste("Clase", 1:model$nclass),
+      Proporcion = model$P,
+      Porcentaje = paste0(round(model$P * 100, 1), "%"),
+      Casos = round(model$P * model$N)
+    )
+    
+    p <- plot_ly(df, 
+                 x = ~Clase, 
+                 y = ~Proporcion, 
+                 type = 'bar',
+                 marker = list(
+                   color = ~Proporcion,
+                   colorscale = 'Viridis',
+                   showscale = FALSE
+                 ),
+                 text = ~paste("Proporción:", Porcentaje, "<br>Casos:", Casos),
+                 hovertemplate = paste('<b>%{x}</b><br>',
+                                       '%{text}',
+                                       '<extra></extra>')) %>%
+      layout(
+        title = list(text = "Distribución de Clases Latentes", font = list(size = 16, family = "Arial")),
+        xaxis = list(title = "Clase"),
+        yaxis = list(title = "Proporción", tickformat = ".1%"),
+        plot_bgcolor = '#f8f9fa',
+        paper_bgcolor = '#f8f9fa'
+      )
+    
+    p
+  })
+  
+  # Heatmap de probabilidades
+  output$heatmap_plot <- renderPlotly({
+    req(lca_model())
+    model <- lca_model()
+    
+    # Crear matriz combinada
+    all_probs <- do.call(rbind, lapply(names(model$probs), function(var_name) {
+      prob_matrix <- model$probs[[var_name]]
+      df <- as.data.frame(prob_matrix)
+      df$Variable <- var_name
+      df$Clase <- paste("Clase", 1:nrow(df))
+      df
+    }))
+    
+    all_probs_long <- pivot_longer(all_probs, 
+                                   cols = -c(Variable, Clase), 
+                                   names_to = "Categoria", 
+                                   values_to = "Probabilidad")
+    
+    p <- plot_ly(
+      data = all_probs_long,
+      x = ~paste(Variable, Categoria),
+      y = ~Clase,
+      z = ~Probabilidad,
+      type = "heatmap",
+      colorscale = "Viridis",
+      hovertemplate = paste('<b>%{y}</b><br>',
+                            '%{x}<br>',
+                            'Probabilidad: %{z:.3f}',
+                            '<extra></extra>')
+    ) %>%
+      layout(
+        title = "Mapa de Calor - Probabilidades Condicionales",
+        xaxis = list(title = "Variable - Categoría", tickangle = -45),
+        yaxis = list(title = "Clase Latente"),
+        plot_bgcolor = '#f8f9fa',
+        paper_bgcolor = '#f8f9fa'
+      )
+    
+    p
+  })
+  
+  # Gráfico de probabilidades posteriores
+  output$posterior_plot <- renderPlot({
+    req(lca_model())
+    model <- lca_model()
+    
+    post_avg <- colMeans(model$posterior)
+    
+    df <- data.frame(
+      Clase = paste("Clase", 1:model$nclass),
+      Prob_Promedio = post_avg
+    )
+    
+    ggplot(df, aes(x = Clase, y = Prob_Promedio, fill = Clase)) +
+      geom_bar(stat = "identity", alpha = 0.85) +
+      geom_text(aes(label = round(Prob_Promedio, 3)), 
+                vjust = -0.5, 
+                size = 5, 
+                fontface = "bold") +
+      labs(title = "Probabilidades Posteriores Promedio por Clase",
+           subtitle = "Certeza de la clasificación",
+           x = "Clase Latente", 
+           y = "Probabilidad Posterior Promedio") +
+      theme_minimal() +
+      theme(
+        legend.position = "none",
+        plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+        plot.subtitle = element_text(hjust = 0.5, size = 12, color = "gray40"),
+        panel.grid.major.x = element_blank()
+      ) +
+      scale_fill_viridis_d() +
+      ylim(0, max(df$Prob_Promedio) * 1.15)
+  })
+  
+  # Gráfico de entropía
+  output$entropy_plot <- renderPlotly({
+    req(lca_model())
+    model <- lca_model()
+    
+    # Calcular entropía por observación
+    entropy_per_obs <- apply(model$posterior, 1, function(probs) {
+      probs <- probs[probs > 0]  # Evitar log(0)
+      -sum(probs * log(probs))
+    })
+    
+    # Asignar a clases
+    df <- data.frame(
+      Clase = paste("Clase", model$predclass),
+      Entropia = entropy_per_obs
+    )
+    
+    p <- plot_ly(df, 
+                 y = ~Clase, 
+                 x = ~Entropia, 
+                 type = 'box',
+                 marker = list(color = '#4a90e2'),
+                 line = list(color = '#2c5282')) %>%
+      layout(
+        title = "Distribución de Entropía por Clase",
+        xaxis = list(title = "Entropía (menor = mayor certeza)"),
+        yaxis = list(title = "Clase Asignada"),
+        plot_bgcolor = '#f8f9fa',
+        paper_bgcolor = '#f8f9fa'
+      )
+    
+    p
+  })
+  
+  # ===== COMPARACIÓN DE MODELOS =====
+  
+  observeEvent(input$compare_models, {
+    req(data_loaded(), input$variables, input$nclass_compare)
+    
+    withProgress(message = 'Comparando modelos...', value = 0, {
+      tryCatch({
+        data <- data_loaded()[, input$variables, drop = FALSE]
+        data <- data.frame(lapply(data, function(x) {
+          if (!is.numeric(x)) as.numeric(as.factor(x)) else x
+        }))
+        
+        f <- as.formula(paste("cbind(", paste(input$variables, collapse = ", "), ") ~ 1"))
+        
+        results_list <- list()
+        nclass_values <- as.numeric(input$nclass_compare)
+        
+        for (i in seq_along(nclass_values)) {
+          nc <- nclass_values[i]
+          incProgress(i / length(nclass_values), 
+                      detail = paste("Estimando modelo con", nc, "clases..."))
+          
+          model <- poLCA(f, data, nclass = nc, maxiter = input$max_iter, 
+                         nrep = 10, verbose = FALSE)
+          
+          results_list[[i]] <- data.frame(
+            Num_Clases = nc,
+            Log_Likelihood = round(model$llik, 2),
+            AIC = round(model$aic, 2),
+            BIC = round(model$bic, 2),
+            Gsq = round(model$Gsq, 2),
+            Chisq = round(model$Chisq, 2),
+            Num_Parametros = model$npar,
+            GL = model$resid.df
+          )
+        }
+        
+        comparison_results(do.call(rbind, results_list))
+        showNotification("✓ Comparación completada", type = "message", duration = 3)
+        
+      }, error = function(e) {
+        showNotification(paste("✗ Error:", e$message), type = "error", duration = 5)
+      })
+    })
+  })
+  
+  # Recomendación automática
+  output$model_recommendation <- renderUI({
+    req(comparison_results())
+    df <- comparison_results()
+    
+    best_aic <- df$Num_Clases[which.min(df$AIC)]
+    best_bic <- df$Num_Clases[which.min(df$BIC)]
+    
+    tagList(
+      tags$div(
+        style = "background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                 color: white; padding: 25px; border-radius: 10px;",
+        tags$h3(icon("star"), " Modelo Recomendado", style = "margin-top: 0;"),
+        tags$hr(style = "border-color: rgba(255,255,255,0.3);"),
+        tags$div(
+          style = "font-size: 16px; line-height: 1.8;",
+          tags$p(icon("check-circle"), 
+                 tags$strong(" Según BIC (criterio más conservador): "), 
+                 tags$span(style = "font-size: 24px; font-weight: bold;", 
+                           paste(best_bic, "clases"))),
+          tags$p(icon("info-circle"), 
+                 tags$strong(" Según AIC (criterio más flexible): "), 
+                 tags$span(style = "font-size: 24px; font-weight: bold;", 
+                           paste(best_aic, "clases"))),
+          tags$hr(style = "border-color: rgba(255,255,255,0.3);"),
+          tags$p(
+            style = "font-size: 14px; opacity: 0.9;",
+            ifelse(best_aic == best_bic,
+                   "✓ Ambos criterios coinciden. Alta confianza en la recomendación.",
+                   "⚠ Los criterios difieren. Revisa la interpretabilidad de las clases.")
+          )
+        )
+      )
+    )
+  })
+  
+  # Tabla de comparación mejorada
+  output$comparison_table <- renderDT({
+    req(comparison_results())
+    df <- comparison_results()
+    
+    # Identificar mejores modelos
+    df$Mejor_AIC <- ifelse(df$AIC == min(df$AIC), "★", "")
+    df$Mejor_BIC <- ifelse(df$BIC == min(df$BIC), "★", "")
+    
+    datatable(
+      df,
+      options = list(
+        scrollX = TRUE,
+        pageLength = 10,
+        dom = 'Bfrtip',
+        buttons = c('copy', 'csv', 'excel')
+      ),
+      rownames = FALSE,
+      class = 'cell-border stripe'
+    ) %>%
+      formatStyle(
+        'AIC',
+        backgroundColor = styleInterval(
+          quantile(df$AIC, c(0.33, 0.66)),
+          c('#d4edda', '#fff3cd', '#f8d7da')
+        )
+      ) %>%
+      formatStyle(
+        'BIC',
+        backgroundColor = styleInterval(
+          quantile(df$BIC, c(0.33, 0.66)),
+          c('#d4edda', '#fff3cd', '#f8d7da')
+        )
+      )
+  })
+  
+  # Gráfico de comparación interactivo
+  output$comparison_plot <- renderPlotly({
+    req(comparison_results())
+    df <- comparison_results()
+    
+    p <- plot_ly(df, x = ~Num_Clases) %>%
+      add_trace(y = ~AIC, name = 'AIC', type = 'scatter', mode = 'lines+markers',
+                line = list(color = '#e74c3c', width = 3),
+                marker = list(size = 10, color = '#e74c3c')) %>%
+      add_trace(y = ~BIC, name = 'BIC', type = 'scatter', mode = 'lines+markers',
+                line = list(color = '#3498db', width = 3),
+                marker = list(size = 10, color = '#3498db')) %>%
+      layout(
+        title = list(text = "Comparación AIC vs BIC", font = list(size = 16)),
+        xaxis = list(title = "Número de Clases", dtick = 1),
+        yaxis = list(title = "Valor del Criterio"),
+        hovermode = 'x unified',
+        plot_bgcolor = '#f8f9fa',
+        paper_bgcolor = '#f8f9fa',
+        legend = list(x = 0.8, y = 1)
+      )
+    
+    p
+  })
+  
+  # Gráfico de log-likelihood
+  output$loglik_plot <- renderPlotly({
+    req(comparison_results())
+    df <- comparison_results()
+    
+    p <- plot_ly(df, 
+                 x = ~Num_Clases, 
+                 y = ~Log_Likelihood, 
+                 type = 'scatter', 
+                 mode = 'lines+markers',
+                 fill = 'tozeroy',
+                 fillcolor = 'rgba(74, 144, 226, 0.2)',
+                 line = list(color = '#4a90e2', width = 3),
+                 marker = list(size = 10, color = '#2c5282')) %>%
+      layout(
+        title = "Evolución del Log-Likelihood",
+        xaxis = list(title = "Número de Clases", dtick = 1),
+        yaxis = list(title = "Log-Likelihood"),
+        plot_bgcolor = '#f8f9fa',
+        paper_bgcolor = '#f8f9fa'
+      )
+    
+    p
+  })
+  
+  # ===== EXPORTACIÓN =====
+  
+  output$download_original_data <- downloadHandler(
+    filename = function() {
+      paste("datos_originales_", Sys.Date(), ".csv", sep = "")
+    },
+    content = function(file) {
+      write.csv(data_loaded(), file, row.names = FALSE)
+    }
+  )
+  
+  output$download_classified_data <- downloadHandler(
+    filename = function() {
+      paste("datos_clasificados_", Sys.Date(), ".csv", sep = "")
+    },
+    content = function(file) {
+      req(lca_model(), data_loaded())
+      model <- lca_model()
+      classified <- data_loaded()[, input$variables, drop = FALSE]
+      classified$Clase_Asignada <- model$predclass
+      classified$Probabilidad_Maxima <- apply(model$posterior, 1, max)
+      post_probs <- as.data.frame(model$posterior)
+      names(post_probs) <- paste0("Prob_Clase_", 1:model$nclass)
+      classified <- cbind(classified, post_probs)
+      write.csv(classified, file, row.names = FALSE)
+    }
+  )
+  
+  output$download_classified_excel <- downloadHandler(
+    filename = function() {
+      paste("datos_clasificados_", Sys.Date(), ".xlsx", sep = "")
+    },
+    content = function(file) {
+      req(lca_model(), data_loaded())
+      model <- lca_model()
+      classified <- data_loaded()[, input$variables, drop = FALSE]
+      classified$Clase_Asignada <- model$predclass
+      classified$Probabilidad_Maxima <- apply(model$posterior, 1, max)
+      post_probs <- as.data.frame(model$posterior)
+      names(post_probs) <- paste0("Prob_Clase_", 1:model$nclass)
+      classified <- cbind(classified, post_probs)
+      write_xlsx(classified, file)
+    }
+  )
+  
+  output$download_probs <- downloadHandler(
+    filename = function() {
+      paste("probabilidades_condicionales_", Sys.Date(), ".csv", sep = "")
+    },
+    content = function(file) {
+      req(lca_model())
+      model <- lca_model()
+      all_probs <- do.call(rbind, lapply(names(model$probs), function(var_name) {
+        df <- as.data.frame(model$probs[[var_name]])
+        df$Variable <- var_name
+        df$Clase <- paste("Clase", 1:nrow(df))
+        df
+      }))
+      write.csv(all_probs, file, row.names = FALSE)
+    }
+  )
+  
+  output$download_comparison <- downloadHandler(
+    filename = function() {
+      paste("comparacion_modelos_", Sys.Date(), ".csv", sep = "")
+    },
+    content = function(file) {
+      req(comparison_results())
+      write.csv(comparison_results(), file, row.names = FALSE)
+    }
+  )
+  
+  output$download_fit_indices <- downloadHandler(
+    filename = function() {
+      paste("indices_ajuste_", Sys.Date(), ".csv", sep = "")
+    },
+    content = function(file) {
+      req(lca_model())
+      model <- lca_model()
+      fit_df <- data.frame(
+        Indice = c("Log-Likelihood", "AIC", "BIC", "G²", "X²", "N", "Parámetros", "GL"),
+        Valor = c(model$llik, model$aic, model$bic, model$Gsq, model$Chisq,
+                  model$N, model$npar, model$resid.df)
+      )
+      write.csv(fit_df, file, row.names = FALSE)
+    }
+  )
+  
+  output$download_plot_probs <- downloadHandler(
+    filename = function() {
+      paste("grafico_probabilidades_", Sys.Date(), ".png", sep = "")
+    },
+    content = function(file) {
+      req(lca_model())
+      model <- lca_model()
+      
+      png(file, width = 1200, height = 800, res = input$plot_dpi)
+      
+      plot_list <- list()
+      for (var_name in names(model$probs)) {
+        prob_matrix <- model$probs[[var_name]]
+        df <- as.data.frame(prob_matrix)
+        df$Clase <- paste("Clase", 1:nrow(df))
+        df_long <- pivot_longer(df, cols = -Clase, names_to = "Respuesta", values_to = "Probabilidad")
+        
+        p <- ggplot(df_long, aes(x = Respuesta, y = Probabilidad, fill = Clase)) +
+          geom_bar(stat = "identity", position = "dodge", alpha = 0.85) +
+          labs(title = var_name, x = "Categoría", y = "Probabilidad") +
+          theme_minimal() +
+          theme(legend.position = "bottom", plot.title = element_text(hjust = 0.5, face = "bold")) +
+          scale_fill_brewer(palette = "Set2")
+        
+        plot_list[[var_name]] <- p
+      }
+      
+      print(do.call(gridExtra::grid.arrange, c(plot_list, ncol = 2)))
+      dev.off()
+    }
+  )
+  
+  output$download_plot_comparison <- downloadHandler(
+    filename = function() {
+      paste("grafico_comparacion_", Sys.Date(), ".png", sep = "")
+    },
+    content = function(file) {
+      req(comparison_results())
+      df <- comparison_results()
+      
+      png(file, width = 1000, height = 600, res = input$plot_dpi)
+      
+      df_long <- pivot_longer(df, cols = c("AIC", "BIC"), names_to = "Criterio", values_to = "Valor")
+      
+      p <- ggplot(df_long, aes(x = factor(Num_Clases), y = Valor, color = Criterio, group = Criterio)) +
+        geom_line(size = 1.5) +
+        geom_point(size = 4) +
+        labs(title = "Comparación de Criterios de Información (AIC y BIC)",
+             x = "Número de Clases", y = "Valor del Criterio") +
+        theme_minimal() +
+        theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+              legend.position = "top") +
+        scale_color_manual(values = c("AIC" = "#e74c3c", "BIC" = "#3498db"))
+      
+      print(p)
+      dev.off()
+    }
+  )
+}
+
+# ============================================
+# EJECUTAR APLICACIÓN
+# ============================================
+
+shinyApp(ui = ui, server = server)
